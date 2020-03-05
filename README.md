@@ -1,3 +1,7 @@
+## Changes ##
+This version is to run under Windows 10 (or Wine), and provide strict
+mode with standard in and standard out (to use with qjs).
+
 gwsocket [![Build Status](https://travis-ci.org/allinurl/gwsocket.svg?branch=master)](http://travis-ci.org/allinurl/gwsocket) [![gwsocket](http://gwsocket.io/badge?v0.1)](http://gwsocket.io)
 ========
 
