@@ -7,7 +7,7 @@
  * \____/  |__/|__//____/\____/\___/_/|_|\___/\__/
  *
  * The MIT License (MIT)
- * Copyright (c) 2009-2016 Gerardo Orellana <hello @ goaccess.io>
+ * Copyright (c) 2009-2020 Gerardo Orellana <hello @ goaccess.io>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,6 +46,7 @@
 #endif
 
 static WSServer *server = NULL;
+static WSConfig gsconfig = { 0 };
 
 /* *INDENT-OFF* */
 static char short_options[] = "p:Vh";
@@ -107,7 +108,7 @@ cmd_help (void)
   "\n"
   "See the man page for more information `man gwsocket`.\n\n"
   "For more details visit: http://gwsocket.io\n"
-  "gwsocket Copyright (C) 2016 by Gerardo Orellana"
+  "gwsocket Copyright (C) 2020 by Gerardo Orellana"
   "\n\n"
   );
   ws_stop (server);
@@ -116,8 +117,7 @@ cmd_help (void)
 /* *INDENT-ON* */
 
 static void
-handle_signal_action (int sig_number)
-{
+handle_signal_action (int sig_number) {
   if (sig_number == SIGINT) {
     printf ("SIGINT caught!\n");
     /* if it fails to write, force stop */
@@ -129,8 +129,7 @@ handle_signal_action (int sig_number)
 }
 
 static int
-setup_signals (void)
-{
+setup_signals (void) {
   struct sigaction sa;
   memset (&sa, 0, sizeof (sa));
   sa.sa_handler = handle_signal_action;
@@ -146,8 +145,7 @@ setup_signals (void)
 }
 
 static int
-onopen (WSPipeOut * pipeout, WSClient * client)
-{
+onopen (WSPipeOut * pipeout, WSClient * client) {
   uint32_t hsize = sizeof (uint32_t) * 3;
   char *hdr = calloc (hsize, sizeof (char));
   char *ptr = hdr;
@@ -164,8 +162,7 @@ onopen (WSPipeOut * pipeout, WSClient * client)
 }
 
 static int
-onclose (WSPipeOut * pipeout, WSClient * client)
-{
+onclose (WSPipeOut * pipeout, WSClient * client) {
   uint32_t hsize = sizeof (uint32_t) * 3;
   char *hdr = calloc (hsize, sizeof (char));
   char *ptr = hdr;
@@ -181,8 +178,7 @@ onclose (WSPipeOut * pipeout, WSClient * client)
 }
 
 static int
-onmessage (WSPipeOut * pipeout, WSClient * client)
-{
+onmessage (WSPipeOut * pipeout, WSClient * client) {
   WSMessage **msg = &client->message;
   uint32_t hsize = sizeof (uint32_t) * 3;
   char *hdr = NULL, *ptr = NULL;
@@ -201,44 +197,78 @@ onmessage (WSPipeOut * pipeout, WSClient * client)
 }
 
 static void
-parse_long_opt (const char *name, const char *oarg)
-{
+parse_long_opt (const char *name, const char *oarg) {
   if (!strcmp ("addr", name))
-    ws_set_config_host (oarg);
+    gsconfig.host = oarg;
   if (!strcmp ("echo-mode", name))
-    ws_set_config_echomode (1);
+    gsconfig.echomode = 1;
   if (!strcmp ("max-frame-size", name))
-    ws_set_config_frame_size (atoi (oarg));
+    gsconfig.max_frm_size = atoi (oarg);
   if (!strcmp ("origin", name))
-    ws_set_config_origin (oarg);
+    gsconfig.origin = oarg;
   if (!strcmp ("pipein", name))
-    ws_set_config_pipein (oarg);
+    gsconfig.pipein = oarg;
   if (!strcmp ("pipeout", name))
-    ws_set_config_pipeout (oarg);
+    gsconfig.pipeout = oarg;
   if (!strcmp ("strict", name))
-    ws_set_config_strict (1);
+    gsconfig.strict = 1;
   if (!strcmp ("access-log", name))
-    ws_set_config_accesslog (oarg);
+    gsconfig.accesslog = oarg;
 #if HAVE_LIBSSL
   if (!strcmp ("ssl-cert", name))
-    ws_set_config_sslcert (oarg);
+    gsconfig.sslcert = oarg;
   if (!strcmp ("ssl-key", name))
-    ws_set_config_sslkey (oarg);
+    gsconfig.sslkey = oarg;
 #endif
   if (!strcmp ("std", name)) {
+    gsconfig.use_stdin = 1;
+    gsconfig.use_stdout = 1;
+  }
+  if (!strcmp ("stdin", name))
+    gsconfig.use_stdin = 1;
+  if (!strcmp ("stdout", name))
+    gsconfig.use_stdout = 1;
+}
+
+static void
+set_server_opts (void) {
+  if (gsconfig.host)
+    ws_set_config_host (gsconfig.host);
+  if (gsconfig.port)
+    ws_set_config_port (gsconfig.port);
+  if (gsconfig.echomode)
+    ws_set_config_echomode (1);
+  if (gsconfig.max_frm_size)
+    ws_set_config_frame_size (gsconfig.max_frm_size);
+  if (gsconfig.origin)
+    ws_set_config_origin (gsconfig.origin);
+  if (gsconfig.pipein)
+    ws_set_config_pipein (gsconfig.pipein);
+  if (gsconfig.pipeout)
+    ws_set_config_pipeout (gsconfig.pipeout);
+  if (gsconfig.strict)
+    ws_set_config_strict (1);
+  if (gsconfig.accesslog)
+    ws_set_config_accesslog (gsconfig.accesslog);
+#if HAVE_LIBSSL
+  if (gsconfig.sslcert)
+    ws_set_config_sslcert (gsconfig.sslcert);
+  if (gsconfig.sslkey)
+    ws_set_config_sslkey (gsconfig.sslkey);
+#endif
+  if (gsconfig.use_stdin && gsconfig.use_stdout) {
     ws_set_config_stdin (1);
     ws_set_config_stdout (1);
   }
-  if (!strcmp ("stdin", name))
+  if (gsconfig.use_stdin)
     ws_set_config_stdin (1);
-  if (!strcmp ("stdout", name))
+  if (gsconfig.use_stdout)
     ws_set_config_stdout (1);
 }
 
 /* Read the user's supplied command line options. */
 static int
-read_option_args (int argc, char **argv)
-{
+read_option_args (int argc, char **argv) {
   int o, idx = 0;
 
   while ((o = getopt_long (argc, argv, short_options, long_opts, &idx)) >= 0) {
@@ -246,7 +276,7 @@ read_option_args (int argc, char **argv)
       break;
     switch (o) {
     case 'p':
-      ws_set_config_port (optarg);
+      gsconfig.port = optarg;
       break;
     case 'h':
       cmd_help ();
@@ -271,8 +301,7 @@ read_option_args (int argc, char **argv)
 }
 
 static void
-set_self_pipe (void)
-{
+set_self_pipe (void) {
   /* Initialize self pipe. */
   if (pipe (server->self_pipe) == -1)
     FATAL ("Unable to create pipe: %s.", strerror (errno));
@@ -283,9 +312,11 @@ set_self_pipe (void)
 }
 
 int
-main (int argc, char **argv)
-{
-  if ((server = ws_init ("0.0.0.0", "7890")) == NULL) {
+main (int argc, char **argv) {
+  if (read_option_args (argc, argv))
+    exit (EXIT_FAILURE);
+
+  if ((server = ws_init ("0.0.0.0", "7890", set_server_opts)) == NULL) {
     perror ("Error during ws_init.\n");
     exit (EXIT_FAILURE);
   }
@@ -298,8 +329,7 @@ main (int argc, char **argv)
   if (setup_signals () != 0)
     exit (EXIT_FAILURE);
 
-  if (read_option_args (argc, argv) == 0)
-    ws_start (server);
+  ws_start (server);
   ws_stop (server);
 
   return EXIT_SUCCESS;

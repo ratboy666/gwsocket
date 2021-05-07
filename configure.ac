@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.59])
-AC_INIT([gwsocket], [0.3], [goaccess@prosoftcorp.com], [], [http://gwsocket.io])
+AC_INIT([gwsocket], [0.4], [goaccess@prosoftcorp.com], [], [http://gwsocket.io])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/gwsocket.c])
 AC_CONFIG_HEADERS([src/config.h])
@@ -41,11 +41,11 @@ AC_ARG_WITH([openssl],AC_HELP_STRING([--with-openssl], [build with OpenSSL suppo
 
 # Build with OpenSSL
 if test "$openssl" = 'yes'; then
-  AC_CHECK_LIB([ssl], [SSL_library_init],,[AC_MSG_ERROR([ssl library missing])])
-  AC_CHECK_LIB([crypto], [CRYPTO_num_locks],,[AC_MSG_ERROR([crypto library missing])])
+  AC_CHECK_LIB([ssl], [SSL_SESSION_new],,[AC_MSG_ERROR([ssl library missing])])
+  AC_CHECK_LIB([crypto], [CRYPTO_free],,[AC_MSG_ERROR([crypto library missing])])
 fi
 # For Makefile.am
-#AM_CONDITIONAL(HAVE_OPENSSL, test "$openssl" = "yes")
+AM_CONDITIONAL(HAVE_OPENSSL, test "$openssl" = "yes")
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/socket.h sys/time.h unistd.h])
@@ -61,7 +61,21 @@ AC_CHECK_TYPES([ptrdiff_t])
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([gettimeofday memmove memset mkfifo select socket strcasecmp strchr strerror strpbrk strstr])
+AC_CHECK_FUNCS([gettimeofday])
+AC_CHECK_FUNCS([malloc])
+AC_CHECK_FUNCS([memmove])
+AC_CHECK_FUNCS([memset])
+AC_CHECK_FUNCS([mkfifo])
+AC_CHECK_FUNCS([poll])
+AC_CHECK_FUNCS([realloc])
+AC_CHECK_FUNCS([socket])
+AC_CHECK_FUNCS([strcasecmp])
+AC_CHECK_FUNCS([strchr])
+AC_CHECK_FUNCS([strerror])
+AC_CHECK_FUNCS([strcasecmp])
+AC_CHECK_FUNCS([strpbrk])
+AC_CHECK_FUNCS([strrchr])
+AC_CHECK_FUNCS([strstr])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
